@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>نمایش و جستجوی داده‌ها</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Vazirmatn&display=swap');
+
+  body {
+    font-family: 'Vazirmatn', Tahoma, sans-serif;
+    padding: 20px;
+    background: #f0f4f8;
+    direction: rtl;
+    color: #333;
+  }
+
+  h2 {
+    text-align: center;
+    margin-bottom: 25px;
+    color: #0077cc;
+    text-shadow: 0 1px 1px rgba(0,0,0,0.1);
+  }
+
+  .file-input-wrapper {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  input[type="file"] {
+    display: none;
+  }
+
+  label[for="csvFileInput"] {
+    background: #0077cc;
+    color: white;
+    padding: 12px 30px;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,119,204,0.3);
+    transition: background-color 0.3s ease;
+    user-select: none;
+  }
+
+  label[for="csvFileInput"]:hover {
+    background: #005fa3;
+  }
+
+  #searchInput {
+    width: 100%;
+    max-width: 600px;
+    display: block;
+    margin: 0 auto 30px auto;
+    padding: 12px 20px;
+    font-size: 18px;
+    border: 2px solid #0077cc;
+    border-radius: 12px;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.1);
+    outline: none;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  #searchInput:focus {
+    border-color: #005fa3;
+    box-shadow: 0 0 8px rgba(0,95,163,0.7);
+  }
+
+  table {
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    border-collapse: collapse;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  th, td {
+    padding: 14px 12px;
+    border-bottom: 1px solid #e3e8ef;
+    text-align: center;
+    font-size: 15px;
+  }
+
+  th {
+    background-color: #0077cc;
+    color: white;
+    font-weight: 600;
+    user-select: none;
+  }
+
+  tr:hover {
+    background-color: #f0f7ff;
+  }
+
+  tr:nth-child(even) {
+    background-color: #f9fbff;
+  }
+
+  td {
+    color: #555;
+  }
+
+  @media (max-width: 600px) {
+    th, td {
+      font-size: 13px;
+      padding: 10px 6px;
+    }
+
+    #searchInput {
+      font-size: 16px;
+      padding: 10px 15px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<h2> جستجوی فهرست مراکز تحت قرارداد بیمه کوثر  </h2>
+<h2> مدیریت منابع انسانی و آموزش پتروپارس  </h2>
+
+<div class="file-input-wrapper">
+  <input type="file" id="csvFileInput" accept=".csv" />
+  <label for="csvFileInput">انتخاب فایل دریافت شده</label>
+</div>
+
+<input type="text" id="searchInput" placeholder="جستجو در داده‌ها..." />
+
+<table id="dataTable"></table>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script>
+  const fileInput = document.getElementById('csvFileInput');
+  const searchInput = document.getElementById('searchInput');
+  const dataTable = document.getElementById('dataTable');
+  let allData = [];
+
+  fileInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: function(results) {
+        allData = results.data;
+        renderTable(allData);
+      }
+    });
+  });
+
+  searchInput.addEventListener('input', function() {
+    const query = this.value.trim().toLowerCase();
+    if (!query) {
+      renderTable(allData);
+      return;
+    }
+    const filtered = allData.filter(row => {
+      return Object.values(row).some(val =>
+        val && val.toString().toLowerCase().includes(query)
+      );
+    });
+    renderTable(filtered);
+  });
+
+  function renderTable(data) {
+    if (data.length === 0) {
+      dataTable.innerHTML = '<tr><td>هیچ داده‌ای پیدا نشد.</td></tr>';
+      return;
+    }
+    // ساخت هدر جدول
+    const headers = Object.keys(data[0]);
+    let html = '<thead><tr>';
+    headers.forEach(h => {
+      html += `<th>${h}</th>`;
+    });
+    html += '</tr></thead><tbody>';
+
+    // ساخت ردیف‌ها
+    data.forEach(row => {
+      html += '<tr>';
+      headers.forEach(h => {
+        html += `<td>${row[h] || ''}</td>`;
+      });
+      html += '</tr>';
+    });
+    html += '</tbody>';
+    dataTable.innerHTML = html;
+  }
+</script>
+
+</body>
+</html>
